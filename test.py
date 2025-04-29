@@ -532,5 +532,5 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
-    print("测试")
+    print("测试1")
     main()
