@@ -1,6 +1,7 @@
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.regex.*;
 
@@ -44,7 +45,7 @@ public class TextGraph {
 
     public static void main(String[] args) {
     TextGraph textGraph = new TextGraph();
-    Scanner scanner = new Scanner(System.in);
+    Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8.name());;
 
     // 获取文件路径
     String filePath;
@@ -56,21 +57,22 @@ public class TextGraph {
     }
 
     // 读取文件并构建图
-    textGraph.initfromfile(filePath,textGraph);
-    textGraph.mainloop(textGraph, scanner);
+    textGraph.initfromfile(filePath);
+    textGraph.mainloop(scanner);
     
     }
-    public static void initfromfile(String filepath,TextGraph textGraph){
-        try {
+    public  void initfromfile(String filepath){
+        try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_8))){
             String content = readFile(filepath);
-            textGraph.buildGraph(content);
+            this.buildGraph(content);
             System.out.println("图构建完成！");
     } catch (IOException e) {
             System.out.println("文件读取错误: " + e.getMessage());
         return;
     }
     }
-    public void mainloop(TextGraph textGraph,Scanner scanner){
+    public void mainloop(Scanner scanner){
         while (true) {
         System.out.println("\n=== 文本图分析系统 ===");
         System.out.println("1. 显示有向图");
@@ -98,7 +100,7 @@ public class TextGraph {
 
             case 1:
                 try {
-                    File image = textGraph.showDirectedGraph();
+                    File image = this.showDirectedGraph();
                     System.out.println("有向图已生成: " + image.getAbsolutePath());
                 } catch (Exception e) {
                     System.out.println("图形生成失败: " + e.getMessage());
@@ -110,13 +112,13 @@ public class TextGraph {
                 String word1 = scanner.nextLine();
                 System.out.print("输入第二个单词: ");
                 String word2 = scanner.nextLine();
-                System.out.println(textGraph.queryBridgeWords(word1, word2));
+                System.out.println(this.queryBridgeWords(word1, word2));
                 break;
 
             case 3:
                 System.out.print("输入新文本: ");
                 String inputText = scanner.nextLine();
-                String newText = textGraph.generateNewText(inputText);
+                String newText = this.generateNewText(inputText);
                 System.out.println("生成的新文本: " + newText);
                 break;
 
@@ -129,14 +131,14 @@ public class TextGraph {
                     
                     String pathResult;
                     if (!endWord.isEmpty()) {
-                        pathResult = textGraph.calcShortestPath(startWord, endWord);
+                        pathResult = this.calcShortestPath(startWord, endWord);
                     } else {
-                        pathResult = textGraph.calcAllShortestPaths(startWord);
+                        pathResult = this.calcAllShortestPaths(startWord);
                     }
                     System.out.println(pathResult);
 
                     try {
-                        File image = textGraph.showDirectedGraph();
+                        File image = this.showDirectedGraph();
                         System.out.println("带有最短路径标注的图已生成: " + image.getAbsolutePath());
                     } catch (Exception e) {
                         System.out.println("图形生成失败: " + e.getMessage());
@@ -148,7 +150,7 @@ public class TextGraph {
                 System.out.print("输入要查询的单词: ");
                 String prWord = scanner.nextLine().trim();
                 if (!prWord.isEmpty()) {
-                    Double prValue = textGraph.calPageRank(prWord);
+                    Double prValue = this.calPageRank(prWord);
                     if (prValue == 0.0) {
                         System.out.println("单词 '" + prWord + "' 不在图中！");
                     } else {
@@ -158,7 +160,7 @@ public class TextGraph {
 
                 // 显示前5重要节点
                 System.out.println("\n--- 重要节点排名（前5）---");
-                List<Map.Entry<String, Double>> ranked = new ArrayList<>(textGraph.pageRankMap.entrySet());
+                List<Map.Entry<String, Double>> ranked = new ArrayList<>(this.pageRankMap.entrySet());
                 ranked.sort((e1, e2) -> e2.getValue().compareTo(e1.getValue()));
                 for (int i = 0; i < Math.min(5, ranked.size()); i++) {
                     Map.Entry<String, Double> entry = ranked.get(i);
@@ -172,7 +174,7 @@ public class TextGraph {
                 if (fileName.isEmpty()) {
                     fileName = "random_walk_result.txt";
                 }
-                System.out.println(textGraph.randomWalk(fileName));
+                System.out.println(this.randomWalk(fileName));
                 System.out.printf("游走记录已保存到文件: %s\n", fileName);
                 break;
 
@@ -244,7 +246,7 @@ public class TextGraph {
         return formatBridgeOutput(bridges, word1, word2);
     }
 
-    private List<String> getBridgeWords(String w1, String w2) {
+    public List<String> getBridgeWords(String w1, String w2) {
         List<String> bridges = new ArrayList<>();
         if (!graph.containsKey(w1) || !graph.containsKey(w2)) {
             return bridges;
@@ -258,7 +260,7 @@ public class TextGraph {
         return bridges;
     }
 
-    private String formatBridgeOutput(List<String> bridges, String w1, String w2) {
+    public String formatBridgeOutput(List<String> bridges, String w1, String w2) {
         if (bridges.isEmpty()) {
             return String.format("No bridge words from %s to %s!", w1, w2);
         }
